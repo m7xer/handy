@@ -31,11 +31,26 @@ Output:
 - upload to radio
 - profit
 
+## html
+
+### repeaterMap.html
+
+Displays repeaters on an open street map in a way that is somewhat more printable than others.
+
+Usage:
+
+`
+open html/repeaterMap.html  
+`
+
+Advanced usage:
+paste the output from generateChirpCSV suitableRepeaters or allRepeaters json into the repeaters var at the bottom of repeaterMap.html, modify `center: [52.458333333333336, -1.9166666666666667]` at the top to see a custom view, save and refresh.
+
 # TODO
 
 - ~~csv generator for repeaters~~
-- offer ukrepeater info as json (can be found in allRepeaters output from generateChirpCSV)
-- printable local repeater map
+- ~~offer ukrepeater info as json (can be found in allRepeaters json output from running generateChirpCSV)~~
+- ~~printable local repeater map~~
 - calendar with local net info
 - generate elevation LOS graphs for repeaters using https://developers.google.com/maps/documentation/elevation/overview?hl=ru
 - grc files for various flows (maybe in a different sdr project)
