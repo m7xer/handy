@@ -1,11 +1,15 @@
-# handy
-utilities for handheld radio
+# handy - utilities for handheld radio
+
+_WARNING! This code is kludged together, it is not idiomatic in any way and was born purely out of immediate necessity._
 
 ## install
 
-`
-npm install
-`
+- ensure internect connectivity
+- ensure you have "a recent" nodejs/npm installed
+- `git@github.com:m7xer/handy.git`
+- `cd handy`
+- `npm install`
+
 
 ## scripts
 
@@ -53,4 +57,5 @@ paste the output from generateChirpCSV suitableRepeaters or allRepeaters json in
 - ~~printable local repeater map~~
 - calendar with local net info
 - generate elevation LOS graphs for repeaters using https://developers.google.com/maps/documentation/elevation/overview?hl=ru
+- refactor it all so it's more maintainable. lol.
 - grc files for various flows (maybe in a different sdr project)

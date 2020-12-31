@@ -2,7 +2,7 @@
   "name": "handy",
   "version": "1.0.0",
   "description": "some useful tools for handy talky radios, baofeng etc",
-  "main": "index.js",
+  "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
