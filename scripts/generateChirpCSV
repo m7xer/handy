@@ -1,0 +1,206 @@
+#!/usr/bin/env node
+const fs = require('fs')
+const request = require('request')
+const parse = require('csv-parse/lib/sync')
+
+const tmpl = (str, data) => {
+	for (var prop in data) {
+		if (data.hasOwnProperty(prop)) {
+			str = str.replace(new RegExp('{' + prop + '}','g'), data[prop])
+		}
+	}
+	return str
+}
+
+const header = 'Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,Mode,TStep,Skip,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE'
+
+// 60,ISS,145.800000,split,445.800000,Tone,67.0,88.5,023,NN,FM,5.00,,,,,,
+const rowTemplate = '{rowNum},{name},{downlink},{offset},{uplink},Tone,{toneFreq},67.0,023,NN,FM,5.00,,,,,,'
+
+const roundFreq = (n) => Math.floor(n * 10000000) / 10000000
+
+const genSatelliteRows = (satellite) => {
+	// number of shifts to make below and above base uplink
+	let numDopplerSteps = 3
+	let dopplerFreqStep = 0.0025
+	// TODO modify downlink not uplink!!!
+	let downlink = satellite.downlink + numDopplerSteps * dopplerFreqStep
+	// let uplink = satellite.uplink + numDopplerSteps * dopplerFreqStep
+	let channels = 1 + numDopplerSteps * 2
+	let rows = []
+	while (channels--) {
+		rows.push(tmpl(rowTemplate, {
+			// rowNum: channel++,
+			name: satellite.name + '-' + channels,
+			downlink: downlink,
+			// downlink: satellite.downlink,
+			toneFreq: satellite.toneFreq,
+			uplink: satellite.uplink,
+			// uplink: uplink,
+			offset: 'split'
+		}))
+		// TODO modify downlink not uplink!!!
+		downlink -= dopplerFreqStep
+		downlink = roundFreq(downlink)
+		// uplink -= dopplerFreqStep
+		// uplink = roundFreq(uplink)
+	}
+	return rows
+}
+
+const genRows = (stations, satellites) => {
+	let rows = stations
+
+	satellites.forEach((s) => rows = rows.concat(genSatelliteRows(s)))
+
+	let channel = 0
+	rows = rows.map((r) => tmpl(r, { rowNum: channel++ }))
+	return rows
+}
+
+const save = (filename, data) => {
+	fs.writeFileSync(filename, data, 'ascii')
+	console.log(`SAVED to ${filename}:\n${data.slice(0, 1024)}\n...SNIPPED...\n${data.slice(-1024)}\n`)
+}
+
+const genCSV = (repeaters) => {
+	let rows = genRows(repeaters, satellites)
+	return [header].concat(rows).join('\n')
+}
+
+const getRepeaters = (url, cb) => {
+	request({
+		url: url,
+		method: 'GET',
+		rejectUnauthorized: false,
+		strictSSL: false,
+		headers: {
+			'Host': 'ukrepeater.net',
+			'Upgrade-Insecure-Requests': 0,
+			'Referer': 'https://ukrepeater.net/csvfiles.htm',
+			'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'
+		}
+	}, (err, res, body) => {
+		if (err || res.statusCode !== 200) {
+			return console.error('getRepeaters UNEXPECTED RESPONSE', body)
+			// consider using default offline list obtained another time
+			// return cb(fs.readFileSync(defaultRepeatersFile))
+		}
+		// console.log('getRepeaters', body)
+		return cb(body)
+	})
+}
+
+// distance calculations for lat long
+// http://www.movable-type.co.uk/scripts/latlong.html
+const calculateDistance = (p1, p2) => {
+	const R = 6371e3; // metres
+	const φ1 = p1.lat * Math.PI/180; // φ, λ in radians
+	const φ2 = p2.lat * Math.PI/180;
+	const Δφ = (p2.lat-p1.lat) * Math.PI/180;
+	const Δλ = (p2.lon-p1.lon) * Math.PI/180;
+
+	const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+	          Math.cos(φ1) * Math.cos(φ2) *
+	          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+	const d = R * c; // in metres
+	return d
+}
+
+// converted from
+// https://github.com/space-physics/maidenhead/blob/master/src/maidenhead/to_location.py
+const maidenheadToLatLon = (maidenheadLocator) => {
+	let N = maidenheadLocator.length
+    if (N > 8 || N % 2 != 0) {
+		return console.error("Maidenhead locator requires 2-8 characters, even number of characters")
+	}
+	let base = "A".charCodeAt(0)
+    let lon = -180.0
+    let lat = -90.0
+    lon += (maidenheadLocator.charCodeAt(0) - base) * 20
+    lat += (maidenheadLocator.charCodeAt(1) - base) * 10
+    if (N >= 4) {
+        lon += parseInt(maidenheadLocator.charAt(2), 10) * 2
+        lat += parseInt(maidenheadLocator.charAt(3), 10) * 1
+    }
+    if (N >= 6) {
+        lon += (maidenheadLocator.charCodeAt(4) - base) * 5.0 / 60
+        lat += (maidenheadLocator.charCodeAt(5) - base) * 2.5 / 60
+    }
+    if (N >= 8) {
+        lon += parseInt(maidenheadLocator.charAt(6), 10) * 5.0 / 600
+        lat += parseInt(maidenheadLocator.charAt(7), 10) * 2.5 / 600
+    }
+    return { lat, lon }
+}
+
+const repeaterURL = 'https://ukrepeater.net/csvcreate1.php'
+const defaultRepeatersFile = 'repeaterlist.csv'
+
+// https://www.amsat.org/fm-satellite-frequency-summary/
+const satellites = [
+	{ name: 'AO91', uplink: 435.250, downlink: 145.960, toneFreq: 67.0 },
+	{ name: 'AO92', uplink: 435.350, downlink: 145.880, toneFreq: 67.0 },
+	{ name: 'SO50', uplink: 145.850, downlink: 436.795, toneFreq: 67.0 },
+	{ name: 'PO101', uplink: 437.500, downlink: 145.900, toneFreq: 141.3 },
+	{ name: 'CAS3H', uplink: 144.350, downlink: 437.200, toneFreq: 67.0 },
+	{ name: 'IO86', uplink: 145.880, downlink: 435.880, toneFreq: 88.5 },
+	{ name: 'AO27', uplink: 145.850, downlink: 436.795, toneFreq: 67.0 },
+	{ name: 'ISS', uplink: 145.990, downlink: 437.800, toneFreq: 67.0 },
+	// TODO: CAS5A, CAS7A, CAS7C, TEVEL when they come online
+]
+
+// TODO add these into the last slots available
+const simplex = [
+	{ name: 'NBARC_SUN', uplink: 145.575, downlink: 145.575, toneFreq: 67.0 }
+]
+
+const home = (process.argv[2] || 'AB12CD').toUpperCase() // maidenhead locator
+const MILES_THRESHOLD = 50
+const METRES_PER_MILE = 1609
+const DISTANCE_THRESHOLD = MILES_THRESHOLD * METRES_PER_MILE
+
+const transformRepeaters = (r) => {
+	return tmpl(rowTemplate, {
+		// rowNum: channel++,
+		name: r.repeater,
+		toneFreq: r.code,
+		downlink: r.TX,
+		uplink: r.RX,
+		offset: 'split'
+	})
+}
+
+getRepeaters(repeaterURL, (repeaters) => {
+
+	console.log('#####\nMaidenhead locator required for best results!\n./generateChirpCSV IO81XY')
+	let homeLL = maidenheadToLatLon(home)
+	console.log(`home location calculated from ${home} as ${JSON.stringify(homeLL)}`)
+
+	let suitableRepeaters = parse(repeaters, {
+		  columns: true,
+		  skip_empty_lines: true,
+		  delimiter: ','
+		})
+		.map((r) => {
+			let distance = calculateDistance(homeLL, r)
+			r.distance = distance
+			return r
+		})
+		.filter((r) => r.mode === 'AV' && (r.band === '2M' || r.band === '70CM'))
+		.sort((a, b) => a.distance - b.distance)
+		.slice(0, 60)
+
+	console.log('suitableRepeaters', suitableRepeaters.length)
+	let jsonfilename = `repeaters_${Date.now()}.json`
+	save(jsonfilename, JSON.stringify(suitableRepeaters))
+
+	let flattened = suitableRepeaters
+		.map(transformRepeaters)
+		// .filter((r) => r.distance <= DISTANCE_THRESHOLD)
+
+	let filename = `stationsAndSatellites_${Date.now()}.csv`
+	save(filename, genCSV(flattened))
+})

@@ -1,0 +1,27 @@
+{
+  "name": "handy",
+  "version": "1.0.0",
+  "description": "some useful tools for handy talky radios, baofeng etc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m7xer/handy.git"
+  },
+  "keywords": [
+    "radio",
+    "baofeng"
+  ],
+  "author": "m7xer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/m7xer/handy/issues"
+  },
+  "homepage": "https://github.com/m7xer/handy#readme",
+  "dependencies": {
+    "csv-parse": "^4.14.2",
+    "request": "^2.88.2"
+  }
+}
