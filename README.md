@@ -6,7 +6,7 @@ _WARNING! This code is kludged together, it is not idiomatic in any way and was 
 
 - ensure internect connectivity
 - ensure you have "a recent" nodejs/npm installed
-- `git@github.com:m7xer/handy.git`
+- `git clone git@github.com:m7xer/handy.git`
 - `cd handy`
 - `npm install`
 
