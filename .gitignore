@@ -1,6 +1,8 @@
 .DS_Store
 build/
 .git
+*.json
+*.csv
 node_modules
 npm-debug.log
 package-lock.json

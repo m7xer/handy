@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+'use strict'
+
 const fs = require('fs')
 const request = require('request')
 const parse = require('csv-parse/lib/sync')
@@ -60,7 +62,7 @@ const genRows = (stations, satellites) => {
 
 const save = (filename, data) => {
 	fs.writeFileSync(filename, data, 'ascii')
-	console.log(`SAVED to ${filename}:\n${data.slice(0, 1024)}\n...SNIPPED...\n${data.slice(-1024)}\n`)
+	console.log(`SAVED to ${filename}:\n${data.slice(0, 256)}\n...SNIPPED...\n${data.slice(-256)}\n`)
 }
 
 const genCSV = (repeaters) => {
@@ -157,7 +159,7 @@ const simplex = [
 	{ name: 'NBARC_SUN', uplink: 145.575, downlink: 145.575, toneFreq: 67.0 }
 ]
 
-const home = (process.argv[2] || 'AB12CD').toUpperCase() // maidenhead locator
+const home = (process.argv[2] || 'IO92BL').toUpperCase() // maidenhead locator
 const MILES_THRESHOLD = 50
 const METRES_PER_MILE = 1609
 const DISTANCE_THRESHOLD = MILES_THRESHOLD * METRES_PER_MILE
@@ -175,15 +177,21 @@ const transformRepeaters = (r) => {
 
 getRepeaters(repeaterURL, (repeaters) => {
 
-	console.log('#####\nMaidenhead locator required for best results!\n./generateChirpCSV IO81XY')
+	console.log('#####\nMaidenhead locator required for best results!\n./generateChirpCSV IO92BL')
 	let homeLL = maidenheadToLatLon(home)
 	console.log(`home location calculated from ${home} as ${JSON.stringify(homeLL)}`)
 
-	let suitableRepeaters = parse(repeaters, {
+	let allRepeaters = parse(repeaters, {
 		  columns: true,
 		  skip_empty_lines: true,
 		  delimiter: ','
 		})
+
+  console.log('allRepeaters', allRepeaters.length)
+  let arfn = `allRepeaters_${Date.now()}.json`
+  save(arfn, JSON.stringify(allRepeaters))
+
+	let suitableRepeaters = allRepeaters
 		.map((r) => {
 			let distance = calculateDistance(homeLL, r)
 			r.distance = distance
@@ -191,16 +199,16 @@ getRepeaters(repeaterURL, (repeaters) => {
 		})
 		.filter((r) => r.mode === 'AV' && (r.band === '2M' || r.band === '70CM'))
 		.sort((a, b) => a.distance - b.distance)
-		.slice(0, 60)
+		.slice(0, 60) // modify/comment this if you want more/all
+    // .filter((r) => r.distance <= DISTANCE_THRESHOLD)
 
 	console.log('suitableRepeaters', suitableRepeaters.length)
-	let jsonfilename = `repeaters_${Date.now()}.json`
-	save(jsonfilename, JSON.stringify(suitableRepeaters))
+	let srfn = `suitableRepeaters_${Date.now()}.json`
+	save(srfn, JSON.stringify(suitableRepeaters))
 
 	let flattened = suitableRepeaters
 		.map(transformRepeaters)
-		// .filter((r) => r.distance <= DISTANCE_THRESHOLD)
 
-	let filename = `stationsAndSatellites_${Date.now()}.csv`
-	save(filename, genCSV(flattened))
+	let sasfn = `stationsAndSatellites_${Date.now()}.csv`
+	save(sasfn, genCSV(flattened))
 })
