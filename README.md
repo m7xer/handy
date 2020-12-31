@@ -55,6 +55,7 @@ paste the output from generateChirpCSV suitableRepeaters or allRepeaters json in
 - ~~csv generator for repeaters~~
 - ~~offer ukrepeater info as json (can be found in allRepeaters json output from running generateChirpCSV)~~
 - ~~printable local repeater map~~
+- allow for custom output folder for all the csv/json
 - calendar with local net info
 - generate elevation LOS graphs for repeaters using https://developers.google.com/maps/documentation/elevation/overview?hl=ru
 - refactor it all so it's more maintainable. lol.
