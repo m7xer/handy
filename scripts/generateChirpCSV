@@ -22,12 +22,10 @@ const rowTemplate = '{rowNum},{name},{downlink},{offset},{uplink},Tone,{toneFreq
 const roundFreq = (n) => Math.floor(n * 10000000) / 10000000
 
 const genSatelliteRows = (satellite) => {
-	// number of shifts to make below and above base uplink
+	// number of shifts to make below and above base downlink freq
 	let numDopplerSteps = 3
 	let dopplerFreqStep = 0.0025
-	// TODO modify downlink not uplink!!!
 	let downlink = satellite.downlink + numDopplerSteps * dopplerFreqStep
-	// let uplink = satellite.uplink + numDopplerSteps * dopplerFreqStep
 	let channels = 1 + numDopplerSteps * 2
 	let rows = []
 	while (channels--) {
@@ -35,17 +33,12 @@ const genSatelliteRows = (satellite) => {
 			// rowNum: channel++,
 			name: satellite.name + '-' + channels,
 			downlink: downlink,
-			// downlink: satellite.downlink,
 			toneFreq: satellite.toneFreq,
 			uplink: satellite.uplink,
-			// uplink: uplink,
 			offset: 'split'
 		}))
-		// TODO modify downlink not uplink!!!
 		downlink -= dopplerFreqStep
 		downlink = roundFreq(downlink)
-		// uplink -= dopplerFreqStep
-		// uplink = roundFreq(uplink)
 	}
 	return rows
 }
@@ -156,7 +149,7 @@ const satellites = [
 
 // TODO add these into the last slots available
 const simplex = [
-	{ name: 'NBARC_SUN', uplink: 145.575, downlink: 145.575, toneFreq: 67.0 }
+	{ name: 'SUN_SIMP', uplink: 145.575, downlink: 145.575, toneFreq: 67.0 }
 ]
 
 const home = (process.argv[2] || 'IO92BL').toUpperCase() // maidenhead locator

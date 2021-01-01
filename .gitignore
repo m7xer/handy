@@ -1,8 +1,9 @@
 .DS_Store
 build/
+scratchpad/
+node_modules/
 .git
 *.json
 *.csv
-node_modules
 npm-debug.log
 package-lock.json

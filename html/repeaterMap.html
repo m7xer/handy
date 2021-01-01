@@ -59,7 +59,7 @@ function addStation(obj, channelNum) {
   tctx.fillStyle = tctx.strokeStyle = isTwoMeter ? TWO_METER_COL : SEVNY_CEMS
 
   // Do 2M text above the line, 70cm will be below
-  // (this helps when both bands are located ion the same tower!)
+  // (this helps when two repeaters are located in the same station!)
   tctx.fillText(stationName, MIDX, TH-2 - (isTwoMeter * MIDY ))
   tctx.beginPath()
   tctx.moveTo(0, MIDY)
