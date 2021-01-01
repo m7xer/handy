@@ -20,8 +20,6 @@ Generate CSV for CHIRP programming, with the 60 most local UK repeaters with acc
 Usage:
 Pass in your UK [Maidenhead locator](https://www.levinecentral.com/ham/grid_square.php) to obtain the nearest 2M and 70CM analogue voice repeaters for you. Satellite data will be augmented before the final CSV is generated. Modify the script for more features as YMMV!
 
-_Satellites included as of 01/01/21 are: AO91 AO92 SO50 PO101 CAS3H IO86 AO27 ISS_
-
 `
 ./scripts/generateChirpCSV IO92BL
 `
@@ -55,6 +53,7 @@ Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPola
 114,ISS-1,437.795,split,145.99,Tone,67,67.0,023,NN,FM,5.00,,,,,,
 115,ISS-0,437.7925,split,145.99,Tone,67,67.0,023,NN,FM,5.00,,,,,,
 ```
+_Satellites included as of 01/01/21 are: AO91 AO92 SO50 PO101 CAS3H IO86 AO27 ISS_
 
 Suggested workflow for your radio:
 - open CHIRP
