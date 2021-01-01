@@ -22,6 +22,7 @@
   "homepage": "https://github.com/m7xer/handy#readme",
   "dependencies": {
     "csv-parse": "^4.14.2",
+    "mkdirp": "^1.0.4",
     "request": "^2.88.2"
   }
 }

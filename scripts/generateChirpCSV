@@ -4,6 +4,7 @@
 const fs = require('fs')
 const request = require('request')
 const parse = require('csv-parse/lib/sync')
+const mkdirp = require('mkdirp')
 
 const tmpl = (str, data) => {
 	for (var prop in data) {
@@ -53,9 +54,13 @@ const genRows = (stations, satellites) => {
 	return rows
 }
 
+const OUTPUT_DIR = "scratchpad"
 const save = (filename, data) => {
-	fs.writeFileSync(filename, data, 'ascii')
-	console.log(`SAVED to ${filename}:\n${data.slice(0, 256)}\n...SNIPPED...\n${data.slice(-256)}\n`)
+	// ensure output directory exists
+	mkdirp(OUTPUT_DIR)
+	let fpath = `${OUTPUT_DIR}/${filename}`
+	fs.writeFileSync(fpath, data, 'ascii')
+	console.log(`SAVED to ${fpath}:\n${data.slice(0, 256)}\n...SNIPPED...\n${data.slice(-256)}\n`)
 }
 
 const genCSV = (repeaters) => {
@@ -170,7 +175,7 @@ const transformRepeaters = (r) => {
 
 getRepeaters(repeaterURL, (repeaters) => {
 
-	console.log('#####\nMaidenhead locator required for best results!\n./generateChirpCSV IO92BL')
+	console.log('#####\nUK Maidenhead locator required for best results! for example:\n./scripts/generateChirpCSV IO92BL')
 	let homeLL = maidenheadToLatLon(home)
 	console.log(`home location calculated from ${home} as ${JSON.stringify(homeLL)}`)
 
