@@ -23,6 +23,10 @@ Pass in your UK [Maidenhead locator](https://www.levinecentral.com/ham/grid_squa
 `
 ./scripts/generateChirpCSV IO92BL
 `
+3 files will be saved to the /scratchpad directory with names like:
+- `allRepeaters_1609502323518.json` (contains all voice repeater info converted from csv here https://ukrepeater.net/csvfiles.htm)
+- `suitableRepeaters_1609498800900.json` (filtered and sorted 2M/70CM analogue voice repeaters, the nearest 60 as calculated from the provided Maidenhead locator)
+- `stationsAndSatellites_1609498800901.csv` (the final CSV file for use within CHIRP, containing filtered repeaters and doppler adjusted satellite channels)
 
 Example Output:
 ```
@@ -59,7 +63,8 @@ Suggested workflow for your radio:
 - open CHIRP
 - download from radio
 - backup *.img file
-- import the CSV
+- run `./scripts/generateChirpCSV <yourMaidenheadLocator>`
+- import the CSV file (eg. `stationsAndSatellites_1609498800901.csv`)
 - load into default rows (or modify if you know what you're doing)
 - save the *.img file
 - upload to radio
