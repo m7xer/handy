@@ -57,7 +57,7 @@ const genRows = (stations, satellites) => {
 const OUTPUT_DIR = "scratchpad"
 const save = (filename, data) => {
 	// ensure output directory exists
-	mkdirp(OUTPUT_DIR)
+	mkdirp.sync(OUTPUT_DIR)
 	let fpath = `${OUTPUT_DIR}/${filename}`
 	fs.writeFileSync(fpath, data, 'ascii')
 	console.log(`SAVED to ${fpath}:\n${data.slice(0, 256)}\n...SNIPPED...\n${data.slice(-256)}\n`)
@@ -137,7 +137,7 @@ const maidenheadToLatLon = (maidenheadLocator) => {
 }
 
 const repeaterURL = 'https://ukrepeater.net/csvcreate1.php'
-const defaultRepeatersFile = 'repeaterlist.csv'
+// const defaultRepeatersFile = 'locallyCachedRepeaterlist.csv'
 
 // https://www.amsat.org/fm-satellite-frequency-summary/
 const satellites = [
