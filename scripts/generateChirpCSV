@@ -20,26 +20,29 @@ const header = 'Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,D
 // 60,ISS,145.800000,split,445.800000,Tone,67.0,88.5,023,NN,FM,5.00,,,,,,
 const rowTemplate = '{rowNum},{name},{downlink},{offset},{uplink},Tone,{toneFreq},67.0,023,NN,FM,5.00,,,,,,'
 
-const roundFreq = (n) => Math.floor(n * 10000000) / 10000000
+const roundFreq = (n) => Math.round(n * 1000000) / 1000000
 
 const genSatelliteRows = (satellite) => {
 	// number of shifts to make below and above base downlink freq
 	let numDopplerSteps = 3
-	let dopplerFreqStep = 0.0025
-	let downlink = satellite.downlink + numDopplerSteps * dopplerFreqStep
+	let dopplerFreqStep = 0.005
+	let downlink = roundFreq(typeof satellite.downlink === "number" ? satellite.downlink : parseFloat(satellite.downlink, 10))
+		+ numDopplerSteps * dopplerFreqStep
 	let channels = 1 + numDopplerSteps * 2
 	let rows = []
 	while (channels--) {
 		rows.push(tmpl(rowTemplate, {
 			// rowNum: channel++,
 			name: satellite.name + '-' + channels,
-			downlink: downlink,
+			downlink: roundFreq(downlink),
 			toneFreq: satellite.toneFreq,
 			uplink: satellite.uplink,
 			offset: 'split'
 		}))
 		downlink -= dopplerFreqStep
 		downlink = roundFreq(downlink)
+
+		// TODO tidy up all the frequency rounding
 	}
 	return rows
 }
@@ -141,18 +144,19 @@ const repeaterURL = 'https://ukrepeater.net/csvcreate1.php'
 
 // https://www.amsat.org/fm-satellite-frequency-summary/
 const satellites = [
-	{ name: 'AO91', uplink: 435.250, downlink: 145.960, toneFreq: 67.0 },
-	{ name: 'AO92', uplink: 435.350, downlink: 145.880, toneFreq: 67.0 },
-	{ name: 'SO50', uplink: 145.850, downlink: 436.795, toneFreq: 67.0 },
-	{ name: 'PO101', uplink: 437.500, downlink: 145.900, toneFreq: 141.3 },
-	{ name: 'CAS3H', uplink: 144.350, downlink: 437.200, toneFreq: 67.0 },
-	{ name: 'IO86', uplink: 145.880, downlink: 435.880, toneFreq: 88.5 },
-	{ name: 'AO27', uplink: 145.850, downlink: 436.795, toneFreq: 67.0 },
-	{ name: 'ISS', uplink: 145.990, downlink: 437.800, toneFreq: 67.0 },
+	{ name: 'AO91', uplink: "435.250", downlink: "145.960", toneFreq: "67.0" },
+	{ name: 'AO92', uplink: "435.350", downlink: "145.880", toneFreq: "67.0" },
+	{ name: 'SO50', uplink: "145.850", downlink: "436.795", toneFreq: "67.0" },
+	{ name: 'PO101', uplink: "437.500", downlink: "145.900", toneFreq: "141.3" },
+	{ name: 'CAS3H', uplink: "144.350", downlink: "437.200", toneFreq: "67.0" },
+	{ name: 'IO86', uplink: "145.880", downlink: "435.880", toneFreq: "88.5" },
+	{ name: 'AO27', uplink: "145.850", downlink: "436.795", toneFreq: "67.0" },
+	{ name: 'ISS', uplink: "145.990", downlink: "437.800", toneFreq: "67.0" },
 	// TODO: CAS5A, CAS7A, CAS7C, TEVEL when they come online
 ]
 
 // TODO add these into the last slots available
+// SOI = stations of interest
 const simplex = [
 	{ name: 'SUN_SIMP', uplink: 145.575, downlink: 145.575, toneFreq: 67.0 }
 ]
@@ -166,7 +170,7 @@ const transformRepeaters = (r) => {
 	return tmpl(rowTemplate, {
 		// rowNum: channel++,
 		name: r.repeater,
-		toneFreq: r.code,
+		toneFreq: r.code || r["ctcss/cc"], // seems to be the new property name
 		downlink: r.TX,
 		uplink: r.RX,
 		offset: 'split'
@@ -195,12 +199,16 @@ getRepeaters(repeaterURL, (repeaters) => {
 			r.distance = distance
 			return r
 		})
-		.filter((r) => r.mode === 'AV' && (r.band === '2M' || r.band === '70CM'))
+		.filter((r) => r.Modes === 'A' && (r.band === '2M' || r.band === '70CM'))
+		// .filter((r) => r.mode === 'AV' && (r.band === '2M' || r.band === '70CM'))
 		.sort((a, b) => a.distance - b.distance)
 		.slice(0, 60) // modify/comment this if you want more/all
     // .filter((r) => r.distance <= DISTANCE_THRESHOLD)
 
 	console.log('suitableRepeaters', suitableRepeaters.length)
+
+	// process.exit(0)
+
 	let srfn = `suitableRepeaters_${Date.now()}.json`
 	save(srfn, JSON.stringify(suitableRepeaters))
 

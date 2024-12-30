@@ -107,8 +107,22 @@ Advanced usage:
 - ~~offer ukrepeater info as json (can be found in allRepeaters json output from running generateChirpCSV)~~
 - ~~printable local repeater map~~
 - spit out a repeaterMap from generateChirpCSV into /scratchpad
+  - create a templated map
+  - add augmented/freq info/approx distances on tool tips, radii
+  - centre the map on the provided location
 - allow for custom output folder for all the csv/json
 - calendar with local net info
+  - populate SOI = stations of interest
 - generate elevation LOS graphs for repeaters using https://developers.google.com/maps/documentation/elevation/overview?hl=ru
 - refactor so it's more maintainable, use ramda for neater list processing, make js adhere to [standard](https://www.npmjs.com/package/standard).
 - grc files for various flows (maybe in a different sdr project)
+- web app
+  - geo location
+  - cached repeater list
+- web serial programming of channels (EEPROM)
+  - quansheng UV-K5
+  - baofeng UV-82
+  - OTG mode from phone/tablet? electron app or PWA?
+  - cable evaluation, find reliable versions
+
+
